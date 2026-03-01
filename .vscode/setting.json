@@ -3,11 +3,21 @@
   "editor.formatOnPaste": true,
   "editor.formatOnSave": true,
   "editor.formatOnType": true,
+  "editor.formatOnSaveMode": "file",
   "editor.suggest.insertMode": "replace",
   "[rust]": {
     "editor.formatOnSave": true,
     "editor.tabSize": 4,
     "editor.defaultFormatter": "rust-lang.rust-analyzer"
+  },
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4,
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "[ts]": {
+    "editor.tabSize": 2,
+    "editor.defaultformatter": "esbenp.prettier-vscode"
   },
   "[toml]": {
     "editor.formatOnSave": true,

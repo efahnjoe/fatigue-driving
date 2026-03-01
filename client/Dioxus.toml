@@ -3,7 +3,7 @@
 [web.app]
 
 # HTML title tag content
-title = "fatigue-driving"
+title = "fatigue-driving-client"
 
 # include `assets` in web platform
 [web.resource]
