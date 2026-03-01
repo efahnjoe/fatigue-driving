@@ -1,5 +1,5 @@
 import { spawn } from "bun";
-import { config_path, config_outdir } from "./lib/config";
+import { config_path, config_resources } from "./lib/config";
 
 const args = process.argv.slice(2);
 
@@ -11,8 +11,8 @@ console.log("Building Client:", isRelease ? "Release" : "Debug");
 
 function buildLauncherCmd(os: string) {
   return isRelease
-    ? ["bun", "build", "./launcher/index.ts", "--compile", "--outfile", `${config_outdir}/${type}/${os}/launcher`]
-    : ["bun", "build", "./launcher/index.ts", "--compile", "--outfile", `${config_outdir}/${type}/${os}/launcher`];
+    ? ["bun", "build", "./launcher/index.ts", "--compile", "--outfile", `${config_resources}/${type}/${os}/launcher`]
+    : ["bun", "build", "./launcher/index.ts", "--compile", "--outfile", `${config_resources}/${type}/${os}/launcher`];
 }
 
 export async function buildLauncher(os: string) {
