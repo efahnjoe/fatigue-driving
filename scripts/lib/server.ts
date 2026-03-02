@@ -1,5 +1,5 @@
-import { join } from "node:path"
-import data from "../../server/pyproject.toml"
+import { join } from "node:path";
+import data from "../../server/pyproject.toml";
 
 const ROOT_DIR = process.cwd();
 const SERVER_PROJECT_DIR = join(ROOT_DIR, "server");

@@ -11,8 +11,22 @@ console.log("Building Client:", isRelease ? "Release" : "Debug");
 
 function buildLauncherCmd(os: string) {
   return isRelease
-    ? ["bun", "build", "./launcher/index.ts", "--compile", "--outfile", `${config_resources}/${type}/${os}/launcher`]
-    : ["bun", "build", "./launcher/index.ts", "--compile", "--outfile", `${config_resources}/${type}/${os}/launcher`];
+    ? [
+        "bun",
+        "build",
+        "./launcher/index.ts",
+        "--compile",
+        "--outfile",
+        `${config_resources}/${type}/${os}/launcher`,
+      ]
+    : [
+        "bun",
+        "build",
+        "./launcher/index.ts",
+        "--compile",
+        "--outfile",
+        `${config_resources}/${type}/${os}/launcher`,
+      ];
 }
 
 export async function buildLauncher(os: string) {
@@ -22,7 +36,7 @@ export async function buildLauncher(os: string) {
       cmd: buildLauncherCmd(os),
       cwd: config_path,
       stdout: "inherit",
-      stderr: "inherit"
+      stderr: "inherit",
     });
 
     const status = await proc.exited;

@@ -15,8 +15,15 @@
   },
   "packageManager": "bun@1.3.9",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/bun": "^1.3.9",
-    "rimraf": "^6.1.3"
+    "eslint": "^10.0.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "globals": "^17.4.0",
+    "prettier": "^3.8.1",
+    "rimraf": "^6.1.3",
+    "typescript-eslint": "^8.56.1"
   },
   "peerDependencies": {
     "typescript": "^5.9.3"
@@ -31,6 +38,8 @@
     "build:macos:release": "bun ./scripts/macosBuilder.ts --release",
     "build": "bun run build:linux && bun run build:windows && bun run build:macos",
     "build:release": "bun run build:linux:release && bun run build:windows:release && bun run build:macos:release",
-    "clean": "rm -rf release target_rust server/dist client/target"
+    "clean": "rm -rf release target_rust server/dist client/target",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write ."
   }
 }

@@ -1,4 +1,4 @@
-import { join } from "node:path"
+import { join } from "node:path";
 import { NAME, VERSION, RESOURCES_DIR } from "../../config";
 
 const ROOT_DIR = process.cwd();

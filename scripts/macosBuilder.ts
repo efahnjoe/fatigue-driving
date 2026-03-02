@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { spawn } from "bun";
-import { mkdir } from "node:fs/promises"
+import { mkdir } from "node:fs/promises";
 import { client_path, client_outdir } from "./lib/client";
 import { server_path, server_name } from "./lib/server";
 import { getOutDir } from "./lib/getOutDir";
@@ -26,8 +26,20 @@ const buildClientCmd = isRelease
 //   : ["./.venv/bin/python", "-m", "PyInstaller", "--noconfirm", "--debug=all", "--console", "--hidden-import", "cv2", "--hidden-import", "onnxruntime", "--name", server_name, "src/main.py"];
 
 const buildServerCmd = isRelease
-  ? ["./.venv/bin/python", "-m", "PyInstaller", "--noconfirm", `${server_name}.release.spec`]
-  : ["./.venv/bin/python", "-m", "PyInstaller", "--noconfirm", `${server_name}.debug.spec`];
+  ? [
+      "./.venv/bin/python",
+      "-m",
+      "PyInstaller",
+      "--noconfirm",
+      `${server_name}.release.spec`,
+    ]
+  : [
+      "./.venv/bin/python",
+      "-m",
+      "PyInstaller",
+      "--noconfirm",
+      `${server_name}.debug.spec`,
+    ];
 
 async function buildClient() {
   try {
@@ -36,7 +48,7 @@ async function buildClient() {
       cmd: buildClientCmd,
       cwd: client_path,
       stdout: "inherit",
-      stderr: "inherit"
+      stderr: "inherit",
     });
 
     const status = await proc.exited;
@@ -65,7 +77,7 @@ async function buildServer() {
       cmd: buildServerCmd,
       cwd: server_path,
       stdout: "inherit",
-      stderr: "inherit"
+      stderr: "inherit",
     });
 
     const status = await proc.exited;

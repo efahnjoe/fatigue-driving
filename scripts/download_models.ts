@@ -61,9 +61,9 @@ const MODELS: ModelConfig[] = [
   },
 ];
 
-const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-const cleanupFile = async (p: string) => unlink(p).catch(() => { });
+const cleanupFile = async (p: string) => unlink(p).catch(() => {});
 
 const hash = (algorithm: "sha256" | "md5", buf: ArrayBuffer): string => {
   const hasher = new Bun.CryptoHasher(algorithm);
@@ -77,7 +77,7 @@ const md5 = (buf: ArrayBuffer) => hash("md5", buf);
 const sizeMb = (bytes: number) => parseFloat((bytes / 1024 / 1024).toFixed(2));
 
 const loadManifest = async (): Promise<Manifest | null> => {
-  if (!await exists(MANIFEST_PATH)) return null;
+  if (!(await exists(MANIFEST_PATH))) return null;
   try {
     return JSON.parse(await file(MANIFEST_PATH).text()) as Manifest;
   } catch {
@@ -96,7 +96,10 @@ const writeManifest = async (entries: Map<string, ManifestModel>) => {
   console.log(`\nManifest written: ${MANIFEST_PATH}`);
 };
 
-const downloadFile = async (url: string, outputPath: string): Promise<{ sha256: string; md5: string }> => {
+const downloadFile = async (
+  url: string,
+  outputPath: string,
+): Promise<{ sha256: string; md5: string }> => {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -110,7 +113,7 @@ const downloadFile = async (url: string, outputPath: string): Promise<{ sha256: 
 
 const downloadWithRetry = async (
   url: string,
-  outputPath: string
+  outputPath: string,
 ): Promise<{ sha256: string; md5: string } | null> => {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     console.log(`Attempt ${attempt}/${MAX_RETRIES}: ${url}`);
@@ -134,7 +137,10 @@ interface VerifyResult {
   size_mb?: number;
 }
 
-const verifyExisting = async (filePath: string, expectedHash: string): Promise<VerifyResult> => {
+const verifyExisting = async (
+  filePath: string,
+  expectedHash: string,
+): Promise<VerifyResult> => {
   const f = file(filePath);
   if (f.size < MIN_FILE_SIZE) {
     console.warn(`File too small (< ${MIN_FILE_SIZE} bytes)`);
@@ -146,7 +152,9 @@ const verifyExisting = async (filePath: string, expectedHash: string): Promise<V
   const fileMd5 = md5(buf);
 
   if (actual !== expectedHash) {
-    console.error(`SHA256 mismatch — expected: ${expectedHash}, got: ${actual}`);
+    console.error(
+      `SHA256 mismatch — expected: ${expectedHash}, got: ${actual}`,
+    );
     return { valid: false };
   }
 
@@ -154,7 +162,13 @@ const verifyExisting = async (filePath: string, expectedHash: string): Promise<V
 };
 
 const downloadModel = async (model: ModelConfig): Promise<ModelResult> => {
-  const { hfRepo, filePathInRepo, filename, fallbackGithubUrl, expectedSha256 } = model;
+  const {
+    hfRepo,
+    filePathInRepo,
+    filename,
+    fallbackGithubUrl,
+    expectedSha256,
+  } = model;
   const filepath = join(OUTPUT_DIR, filename);
   const format = extname(filename).slice(1);
 
@@ -222,17 +236,20 @@ export async function downloadModels() {
   // 加载已有 manifest 作为基准，失败的模型保留旧条目
   const existingManifest = await loadManifest();
   const entries = new Map(
-    existingManifest?.models.map(m => [m.name, m]) ?? []
+    existingManifest?.models.map((m) => [m.name, m]) ?? [],
   );
 
   const results = await Promise.allSettled(
-    MODELS.map(m => downloadModel(m).catch(() => ({ status: "failed" as const })))
+    MODELS.map((m) =>
+      downloadModel(m).catch(() => ({ status: "failed" as const })),
+    ),
   );
 
   const counts = { downloaded: 0, skipped: 0, failed: 0 };
 
   for (const r of results) {
-    const result = r.status === "fulfilled" ? r.value : { status: "failed" as const };
+    const result =
+      r.status === "fulfilled" ? r.value : { status: "failed" as const };
     counts[result.status]++;
     // 校验通过：upsert；失败：保留旧条目（如有）
     if (result.status !== "failed") {
