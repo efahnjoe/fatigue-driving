@@ -1,6 +1,7 @@
-export const NAME = "fatigue-driving";
-export const VERSION = "0.0.1";
-export const AUTHOR = "Efahn Joe";
-export const EMAIL = "efahnjoe@gmail.com";
-export const OUT_DIR = "dist";
-export const RESOURCES_DIR = "resources";
+import data from "./config.json";
+
+export const NAME = data.name;
+export const VERSION = data.version;
+export const AUTHOR = data.author;
+export const OUT_DIR = data.output;
+export const RESOURCES_DIR = data.resources;
