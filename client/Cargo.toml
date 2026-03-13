@@ -7,14 +7,26 @@ edition = "2024"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dioxus = { version = "0.7.3", features = ["router", "fullstack"] }
+anyhow = "1.0.102"
+base64 = "0.22.1"
+dioxus = { version = "0.7.3", features = ["fullstack","router"] }
 dxc = "1.0.0"
 dxc-icons = "0.3.0"
+ffmpeg-next = "8.0.0"
+gloo-timers = "0.3.0"
+iceoryx2 = "0.8.1"
+image = "0.25.9"
+imgproc = "0.3.18"
+nokhwa = "0.10.10"
+rfd = "0.17.2"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+thiserror = "2.0.18"
+tokio = { version = "1.50.0", features = ["full"] }
+tracing = "0.1.44"
 
 [features]
 default = ["desktop"]
-# The feature that are only required for the web = ["dioxus/web"] build target should be optional and only enabled in the web = ["dioxus/web"] feature
-web = ["dioxus/web"]
 # The feature that are only required for the desktop = ["dioxus/desktop"] build target should be optional and only enabled in the desktop = ["dioxus/desktop"] feature
 desktop = ["dioxus/desktop"]
 # The feature that are only required for the mobile = ["dioxus/mobile"] build target should be optional and only enabled in the mobile = ["dioxus/mobile"] feature
