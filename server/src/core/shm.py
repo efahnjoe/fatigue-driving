@@ -22,7 +22,7 @@ import logging
 import time
 from dataclasses import dataclass
 from types import TracebackType
-from typing import Generator, Iterator
+from typing import Generator
 
 import cv2
 import iceoryx2 as iox2
@@ -44,6 +44,7 @@ class InputFrame(ctypes.Structure):
 
     _fields_ = [
         ("frame_id", ctypes.c_uint64),
+        ("timestamp", ctypes.c_uint64),
         ("width", ctypes.c_uint32),
         ("height", ctypes.c_uint32),
         ("channels", ctypes.c_uint32),
@@ -160,14 +161,14 @@ class ShmManager:
         self._node = iox2.NodeBuilder.new().create(iox2.ServiceType.Ipc)
 
         self._subscriber = (
-            self._node.service_builder(self._input_port)
+            self._node.service_builder(iox2.ServiceName.new(self._input_port))
             .publish_subscribe(InputFrame)
             .open_or_create()
             .subscriber_builder()
             .create()
         )
         self._publisher = (
-            self._node.service_builder(self._output_port)
+            self._node.service_builder(iox2.ServiceName.new(self._output_port))
             .publish_subscribe(OutputFrame)
             .open_or_create()
             .publisher_builder()
@@ -215,6 +216,7 @@ class ShmManager:
                     result = my_model(sample.bgr)
                     shm.write(result, sample.frame_id)
         """
+
         if not self._running:
             self.open()
 
@@ -223,7 +225,11 @@ class ShmManager:
                 break
 
             received = False
-            for raw in self._subscriber:
+            while True:
+                raw = self._subscriber.receive()
+                if raw is None:
+                    break
+
                 sample = self._decode(raw.payload())
                 if sample is not None:
                     received = True
@@ -250,10 +256,12 @@ class ShmManager:
                 else:
                     time.sleep(0.001)
         """
+
         if self._subscriber is None:
             return None
 
-        for raw in self._subscriber:
+        raw = self._subscriber.receive()
+        if raw is not None:
             return self._decode(raw.payload())
         return None
 
@@ -286,6 +294,7 @@ class ShmManager:
                 result = my_model(sample.bgr)   # (H, W, 3) uint8 BGR
                 shm.write(result, sample.frame_id)
         """
+
         if self._publisher is None:
             logger.warning("write() called before open()")
             return False
@@ -306,7 +315,7 @@ class ShmManager:
             bgr = np.ascontiguousarray(bgr, dtype=np.uint8)
 
         out = self._publisher.loan_uninit()
-        payload = out.payload()
+        payload = out.payload().contents
         payload.frame_id = frame_id
         payload.width = w
         payload.height = h
@@ -345,6 +354,7 @@ class ShmManager:
         bool
             ``True`` if the frame was sent successfully.
         """
+
         if self._publisher is None:
             logger.warning("write_raw() called before open()")
             return False
@@ -356,7 +366,7 @@ class ShmManager:
             return False
 
         out = self._publisher.loan_uninit()
-        payload = out.payload()
+        payload = out.payload().contents
         payload.frame_id = frame_id
         payload.width = width
         payload.height = height
@@ -390,8 +400,10 @@ class ShmManager:
     # ── Internal helpers ─────────────────────────────────────────────────────
 
     @staticmethod
-    def _decode(frame: InputFrame) -> InputSample | None:
+    def _decode(frame_ptr: InputFrame) -> InputSample | None:
         """Convert a raw InputFrame into an InputSample (RGBA → BGR)."""
+
+        frame = frame_ptr.contents
         w, h = frame.width, frame.height
         if w == 0 or h == 0:
             return None
