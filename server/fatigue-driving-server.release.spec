@@ -5,7 +5,7 @@ a = Analysis(
     ['src/main.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('public/models', 'public/models')],
     hiddenimports=['cv2', 'onnxruntime'],
     hookspath=[],
     hooksconfig={},
