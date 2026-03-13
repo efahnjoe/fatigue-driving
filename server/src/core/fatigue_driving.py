@@ -41,13 +41,13 @@ _DDD_PATH = str(get_resource_path("public/models/ddd_fatigue_v3.onnx"))
 
 
 def detect_faces(img: BGRImage) -> F32Array | None:
+    """Detect faces in the input image using YuNet detector."""
     h, w = img.shape[:2]
-    # 强制将输入尺寸同步给检测器
+    # Sync input size with detector
     _DETECTOR.setInputSize((w, h))
     _, faces = _DETECTOR.detect(img)
 
     if faces is None:
-        # 如果这里打印了，说明 YuNet 确实没看到人脸
         logger.debug(f"YuNet: No faces detected at resolution {w}x{h}")
     else:
         logger.debug(f"YuNet: Detected {len(faces)} face(s)")
@@ -60,6 +60,8 @@ def detect_faces(img: BGRImage) -> F32Array | None:
 
 
 class FatigueMonitor:
+    """Monitor for driver fatigue detection using DDD model."""
+
     def __init__(self, pfld_path: str, ddd_path: str):
         self.ddd_session = ort.InferenceSession(
             ddd_path, providers=["CPUExecutionProvider"]
@@ -74,11 +76,11 @@ class FatigueMonitor:
         self._last_status = "Normal"
 
     def _preprocess_ddd(self, face_roi: BGRImage) -> F32Array:
-        """为 DDD 模型准备输入: 224x224, ImageNet 归一化, float32"""
+        """Preprocess face ROI for DDD model: 224x224, ImageNet normalization, float32."""
         face_resized = cv2.resize(face_roi, (224, 224))
         face_rgb = cv2.cvtColor(face_resized, cv2.COLOR_BGR2RGB)
 
-        # 归一化并显式转换成 float32 解决之前的 InvalidArgument 错误
+        # Normalize to ImageNet mean/std and convert to float32
         input_data = face_rgb.astype(np.float32) / 255.0
         input_data = (input_data - [0.485, 0.456, 0.406]) / [0.229, 0.224, 0.225]
         return input_data.transpose(2, 0, 1)[np.newaxis, ...].astype(np.float32)
@@ -86,11 +88,12 @@ class FatigueMonitor:
     def analyze(
         self, img: BGRImage, face_row: NDArray, need_landmarks: bool = False
     ) -> dict:
+        """Analyze a face region for fatigue/drowsiness detection."""
         h_img, w_img = img.shape[:2]
         # YuNet row: [x, y, w, h, ...]
         x, y, w, h = map(int, face_row[0:4])
 
-        # ── 1. 提取整脸 ROI 并扩边 ──
+        # ── 1. Extract face ROI with padding ──
         pad_w, pad_h = int(w * 0.05), int(h * 0.05)
         x1, y1 = max(0, x - pad_w), max(0, y - pad_h)
         x2, y2 = min(w_img, x + w + pad_w), min(h_img, y + h + pad_h)
@@ -101,7 +104,7 @@ class FatigueMonitor:
             logger.warning(f"Empty ROI for face at [{x}, {y}]")
             return {}
 
-        # 2. 增强对比度 (可选，如果环境光线暗，开启此逻辑能显著提升置信度)
+        # 2. Enhance contrast using CLAHE (useful in low-light conditions)
         lab = cv2.cvtColor(face_roi, cv2.COLOR_BGR2LAB)
         l, a, b = cv2.split(lab)
         clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
@@ -109,12 +112,12 @@ class FatigueMonitor:
         face_roi = cv2.merge((cl, a, b))
         face_roi = cv2.cvtColor(face_roi, cv2.COLOR_LAB2BGR)
 
-        # ── 3. DDD 模型推理 ──
+        # ── 3. DDD model inference ──
         ddd_blob = self._preprocess_ddd(face_roi)
         ddd_outputs = self.ddd_session.run(None, {"input": ddd_blob})
         label_id = np.argmax(ddd_outputs[0])  # 0: Normal, 1: Drowsy
 
-        # 计算 Softmax 置信度
+        # Compute softmax confidence
         logits = ddd_outputs[0][0]
         probs = np.exp(logits) / np.sum(np.exp(logits))
         drowsy_prob = probs[1]
@@ -122,7 +125,8 @@ class FatigueMonitor:
 
         logging.debug(f"DDD: label_id: {label_id} (drowsy_prob: {drowsy_prob:.2f})")
 
-        # ── 3.疲劳判定逻辑 ──
+        # ── 4. Fatigue determination logic ──
+        # Use temporal smoothing: require consecutive drowsy frames before alerting
         status = "Normal"
         if label_id == 1 or drowsy_prob > 0.5:
             status = "Drowsy Alert"
@@ -146,11 +150,12 @@ class FatigueMonitor:
         }
 
 
-# ── 初始化单例 ──
+# ── Initialize singleton ──
 _monitor = FatigueMonitor(_PFLD_PATH, _DDD_PATH)
 
 
 def process_and_analyze(img: BGRImage, show_box: bool = True) -> BGRImage:
+    """Detect faces and analyze each for fatigue, drawing bounding boxes on result."""
     h, w = img.shape[:2]
     _DETECTOR.setInputSize((w, h))
     _, faces = _DETECTOR.detect(img)
