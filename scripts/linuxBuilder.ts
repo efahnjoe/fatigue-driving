@@ -23,8 +23,8 @@ const buildClientCmd = isRelease
   : ["dx", "build", "--platform=linux"];
 
 // const buildServerCmd = isRelease
-//   ? ["./.venv/bin/python", "-m", "PyInstaller", "--noconfirm", "--windowed", "--strip", "--noupx", "--python-option=O", "--hidden-import", "cv2", "--hidden-import", "onnxruntime", "--name", server_name, "src/main.py"]
-//   : ["./.venv/bin/python", "-m", "PyInstaller", "--noconfirm", "--debug=all", "--console", "--hidden-import", "cv2", "--hidden-import", "onnxruntime", "--name", server_name, "src/main.py"];
+//   ? ["./.venv/bin/python", "-m", "PyInstaller", "--add-data", "public/models:public/models", "--noconfirm", "--windowed", "--strip", "--noupx", "--python-option=O", "--hidden-import", "cv2", "--hidden-import", "onnxruntime", "--name", server_name, "src/main.py"]
+//   : ["./.venv/bin/python", "-m", "PyInstaller", "--add-data", "public/models:public/models", "--noconfirm", "--debug=all", "--console", "--hidden-import", "cv2", "--hidden-import", "onnxruntime", "--name", server_name, "src/main.py"];
 
 const buildServerCmd = isRelease
   ? [

@@ -1,3 +1,8 @@
+mod components;
+mod core;
+
+use components::source_selector::SourceSelector;
+use components::video_canvas::{VideoCanvas,use_fps_counter};
 use dioxus::prelude::*;
 use dxc::prelude::*;
 
@@ -11,6 +16,8 @@ fn main() {
 
 #[component]
 fn App() -> Element {
+    let fps = use_fps_counter();
+
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
         document::Link { rel: "stylesheet", href: MAIN_CSS }
@@ -18,33 +25,20 @@ fn App() -> Element {
         document::Link { rel: "stylesheet", href: DXC_THEMES }
 
         DxcContainer {
-            h1 { "疲劳驾驶分析" }
-
             DxcMain {
                 div {
-                    DxcButton{"启动摄像头"}
-                    DxcButton{"停止摄像头"}
-                    DxcButton{"开启疲劳检测"}
-                    DxcButton{"上传文件"}
-                    DxcInput{
-                        type_: "file",
-                    }
-                }
+                    class: "flex flex-col gap-4",
+                    h1 { "疲劳驾驶分析" }
 
-                div {
-                    canvas {
-                        id: "mainCanvas",
-                        width: "640",
-                        height: "480",
-                    }
                     div {
-                        id:"placeholderText",
-                        "摄像头或文件显示区域"
+                        p { "Render FPS: {fps}" }
+                        
+                        SourceSelector{}
+                        VideoCanvas {
+                            canvas_id: "videoCanvas",
+                        }
                     }
                 }
-
-
-                div {"系统就绪"}
             }
         }
     }
